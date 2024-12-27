@@ -119,7 +119,7 @@ const FormWithout = () => {
             </select>
         </div>
         <div>
-            <label>Interest:</label>
+            <label>Interests:</label>
             <label>
                 <input 
                 type="checkbox"
