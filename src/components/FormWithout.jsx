@@ -1,4 +1,6 @@
 import {React, useState} from 'react'
+import * as Yup from 'yup'
+
 
 const FormWithout = () => {
     const [formData, setFormData] = useState ({
@@ -14,7 +16,55 @@ const FormWithout = () => {
         birthDate:"",
     });
 
-    const handleSubmit = () =>{};
+    const [errors, setErrors] = useState()
+    
+    const validationSchema = Yup.object({
+        firstname: Yup.string().required("First Name is Required"),
+        lastname: Yup.string()
+        .required("Last Name is Required")
+        .email("Invalid email format"),
+        email: Yup.string().required("Email is Required"),
+        phoneNumber: Yup.string().matches(/^\d{10}$/, "Phone Number must be 10 digits")
+        .required(),
+        password: Yup.string()
+        .required("Password is required")
+        .min(8, "Password must be atleast 8 characters")
+        .matches(
+            /[!@#$%^&*(),.?":{}|<>]/,
+            "password must contain atleast one symbol"
+        )
+        .matches(/[0-9]/, "password must contain atleast one number")
+        .matches(/[a-z]/, "password must contain atleast one lowercase")
+        .matches(/[A-Z]/, "password must contain atleast one uppercase"),
+        confirmPassword: Yup.string()
+        .oneOf([Yup.ref("password")], "password must match")
+        .required("confirm password is required"),
+        age: Yup.number()
+        .typeError("Age must be a number")
+        .min(18, "You must be atleast 18 years old")
+        .max(100 , "You cannot be older than 100 years old")
+        .required("Age is required"),
+        gender: Yup.string().required("Gender is required"),
+        interests: Yup.array()
+        .min(1, "select atleast one interest")
+        .required("select atleast one interest"),
+        birthDate: Yup.date().required("Date of birth is required"),
+    });
+
+    const handleSubmit = async (e) =>{
+        e.preventDefault();
+        try {
+            await validationSchema.validate(formData, {abortEarly: false});
+            console.log("form submitted", formData);
+        } catch (error) {
+            const newErrors = {};
+
+            error.inner.forEach((err) => {
+                newErrors[err.path] = err.message;
+            });
+            setErrors(newErrors);
+        }
+    };
 
     const handleChange = (e) => {
         const {name, value} = e.target;
@@ -35,6 +85,11 @@ const FormWithout = () => {
                 (interest) => interest !== name
             );
         }
+
+        setFormData({
+            ...formData,
+            interests: updatedInterests, 
+        });
     };
     
 
@@ -47,8 +102,9 @@ const FormWithout = () => {
         name="firstname"
         value={formData.firstname}
         placeholder="Enter your First Name"
-        onChange={handleChange}
-        />
+        onChange={handleChange} errors is undefined
+        /> errors is undefined
+        {errors.firstname && <div className="error">{errors.firstname}</div>} error is undefined
         </div>
         <div>
          <label>Last Name</label>
@@ -59,6 +115,7 @@ const FormWithout = () => {
         placeholder="Enter your First Name"
         onChange={handleChange}
         />
+        {errors.lastname && <div className="error">{errors.lastname}</div>}
         </div>
         <div>
          <label>Email</label>
